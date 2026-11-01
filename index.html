@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style></head><body>
+<title>Story Sleuth</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Special+Elite&family=Nunito:wght@500;700;800;900&display=swap">
+<style>
+/* Layout: a detective's desk under a lamp; every screen is a case file sliding onto it. One fixed night-desk look. */
+:root{
+  --desk:#1a1d33; --desk2:#252a4a; --folder:#e8b54a; --folder-dk:#b9852a; --paper:#fbf6ea; --paper-ln:#d9e4f2; --ink:#232640;
+  --red:#d6334a; --green:#1f9d6c; --blue:#3b6fd8; --muted:#6c6f8c; --glow:rgba(255,214,140,.22);
+  --display:"Alfa Slab One",Rockwell,"Roboto Slab",Georgia,serif; --type:"Special Elite","Courier New",Courier,monospace; --body:"Nunito","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{min-height:100%;background:var(--desk);color:#f3eee0;font-family:var(--body)}
+body{background:radial-gradient(ellipse 70% 55% at 50% 0%,var(--glow),transparent 70%),radial-gradient(ellipse at 50% 120%,#2d2550,transparent 60%),var(--desk);background-attachment:fixed}
+#dust{position:fixed;inset:0;pointer-events:none;z-index:0}
+main{position:relative;z-index:1;max-width:920px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 60px}
+.scr{display:none;animation:slideIn .45s cubic-bezier(.2,.9,.3,1.2)}
+.scr.on{display:block}
+@keyframes slideIn{from{opacity:0;transform:translateY(30px) rotate(-1deg)}to{opacity:1;transform:none}}
+button{font-family:inherit}
+.btn{font-family:var(--display);font-size:17px;letter-spacing:.03em;border:0;border-radius:14px;padding:13px 22px;cursor:pointer;color:#fff;background:var(--red);
+  box-shadow:0 5px 0 #8f1f30,0 10px 22px rgba(0,0,0,.3);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #8f1f30}
+.btn.blue{background:var(--blue);box-shadow:0 5px 0 #24479a,0 10px 22px rgba(0,0,0,.3)}
+.btn.ghost{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px currentColor;opacity:.85}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn:focus-visible,.opt:focus-visible,.card:focus-visible,.case:focus-visible{outline:3px solid #ffd27a;outline-offset:3px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+
+/* title */
+.hero{text-align:center;padding-top:6vh;display:grid;gap:18px;justify-items:center}
+.logo{position:relative;font-family:var(--display);font-size:clamp(46px,11vw,110px);line-height:.92;color:var(--folder);text-shadow:0 4px 0 var(--folder-dk),0 12px 30px rgba(0,0,0,.5);letter-spacing:.02em}
+.logo small{display:block;font-size:.3em;color:#fbf6ea;text-shadow:none;letter-spacing:.22em;font-family:var(--type);margin-top:10px}
+.lens{position:absolute;width:1.15em;height:1.15em;top:-.1em;left:0;animation:sweep 6s ease-in-out infinite;pointer-events:none}
+@keyframes sweep{0%{transform:translateX(-10%) rotate(-8deg)}50%{transform:translateX(230%) translateY(.35em) rotate(10deg)}100%{transform:translateX(-10%) rotate(-8deg)}}
+.tagline{font-size:clamp(17px,2.5vw,21px);max-width:38ch;line-height:1.45;color:#d8d3c4;margin:0}
+.tagline b{color:var(--folder)}
+.badge{display:inline-flex;gap:10px;align-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:8px 16px;font-weight:800}
+
+/* case board */
+h2{font-family:var(--display);font-size:clamp(28px,5vw,42px);margin:0;letter-spacing:.02em;text-wrap:balance}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px}
+.case{position:relative;text-align:left;border:0;cursor:pointer;background:var(--folder);color:var(--ink);border-radius:4px 14px 14px 14px;padding:22px 20px 18px;min-height:190px;
+  box-shadow:0 14px 30px rgba(0,0,0,.4);transition:transform .2s;display:flex;flex-direction:column;gap:8px;transform:rotate(var(--r,0deg))}
+.case::before{content:"";position:absolute;left:0;top:-16px;width:42%;height:18px;background:var(--folder);border-radius:8px 8px 0 0}
+.case:hover{transform:rotate(0) translateY(-6px)}
+.case .no{font-family:var(--type);font-size:14px;letter-spacing:.12em;color:#6b4b10}
+.case .t{font-family:var(--display);font-size:22px;line-height:1.1}
+.case .d{font-size:15px;line-height:1.35;color:#4a3a1c}
+.case .s{margin-top:auto;font-size:22px;letter-spacing:3px;color:#7a5512}
+.case .stamp{position:absolute;right:14px;bottom:16px;font-family:var(--display);color:var(--red);border:3px solid var(--red);padding:2px 8px;transform:rotate(-12deg);font-size:14px;opacity:.85;border-radius:4px}
+.case.lab{background:#9fc2ff}.case.lab::before{background:#9fc2ff}
+
+/* paper */
+.paper{position:relative;background:var(--paper);color:var(--ink);border-radius:6px;padding:30px clamp(18px,4vw,44px) 30px clamp(30px,6vw,64px);box-shadow:0 20px 50px rgba(0,0,0,.45);
+  background-image:linear-gradient(90deg,transparent calc(clamp(18px,4vw,40px) - 1px),rgba(214,51,74,.35) calc(clamp(18px,4vw,40px) - 1px),rgba(214,51,74,.35) clamp(18px,4vw,40px),transparent clamp(18px,4vw,40px)),repeating-linear-gradient(transparent 0 33px,var(--paper-ln) 33px 34px)}
+.clip{position:absolute;top:-14px;right:40px;width:26px;height:64px;border:4px solid #9aa3b8;border-radius:13px;border-bottom:0}
+.paper h3{font-family:var(--display);font-size:clamp(24px,4vw,32px);margin:0 0 6px;line-height:1.15;text-wrap:balance}
+.meta{font-family:var(--type);font-size:14px;color:var(--muted);letter-spacing:.06em;margin-bottom:16px}
+.story p{font-size:clamp(17px,2.2vw,19px);line-height:34px;margin:0 0 0;max-width:62ch}
+.story p+p{margin-top:0;text-indent:1.4em}
+.story mark{background:linear-gradient(transparent 55%,#ffe07a 55%);color:inherit;padding:0 2px}
+
+/* progress */
+.steps{display:flex;gap:6px;margin-bottom:18px}
+.steps i{flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden;position:relative}
+.steps i.done::after,.steps i.cur::after{content:"";position:absolute;inset:0;background:var(--folder);transform-origin:left;animation:fill .5s ease}
+.steps i.cur::after{background:#ffd27a;opacity:.6}
+@keyframes fill{from{transform:scaleX(0)}}
+.qhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.qlabel{font-family:var(--type);letter-spacing:.14em;color:var(--red);font-size:15px}
+.score{font-family:var(--display);color:var(--folder);font-size:20px}
+.q{font-family:var(--display);font-size:clamp(22px,3.6vw,30px);line-height:1.15;margin:0 0 6px;text-wrap:balance}
+.qsub{color:#cfc9b8;margin:0 0 18px;font-size:17px;line-height:1.4;max-width:60ch}
+.opts{display:grid;gap:12px}
+.opt{display:flex;gap:14px;align-items:center;text-align:left;border:0;cursor:pointer;background:var(--paper);color:var(--ink);border-radius:14px;padding:14px 18px;font-size:17px;font-weight:700;line-height:1.35;
+  box-shadow:0 4px 0 #c9c0a8;transition:transform .15s,background .2s}
+.opt:hover:not(:disabled){transform:translateX(6px)}
+.opt .k{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--paper);font-family:var(--display);font-size:15px}
+.opt.right{background:#c8f2dc;box-shadow:0 4px 0 #7cc9a1}.opt.right .k{background:var(--green)}
+.opt.wrong{background:#ffd3d9;box-shadow:0 4px 0 #e28a97;animation:shake .4s}.opt.wrong .k{background:var(--red)}
+.opt:disabled{cursor:default}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.feedback{margin-top:16px;border-radius:14px;padding:14px 18px;font-size:16px;line-height:1.45;display:none}
+.feedback.on{display:block;animation:slideIn .3s}
+.feedback.good{background:rgba(31,157,108,.18);border:1px solid rgba(31,157,108,.6)}
+.feedback.bad{background:rgba(214,51,74,.15);border:1px solid rgba(214,51,74,.55)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:640px){.pair{grid-template-columns:1fr}}
+.pair h4{margin:0 0 10px;font-family:var(--type);letter-spacing:.12em;font-size:15px;color:#ffd27a}
+
+/* ordering */
+.slots{display:grid;gap:10px;margin-bottom:18px;counter-reset:s}
+.slot{min-height:58px;border:2px dashed rgba(255,255,255,.22);border-radius:14px;display:flex;align-items:center;gap:12px;padding:6px 10px;counter-increment:s}
+.slot::before{content:counter(s);font-family:var(--display);font-size:20px;color:var(--folder);width:28px;text-align:center;flex:none}
+.pool{display:grid;gap:10px}
+.card{border:0;text-align:left;cursor:pointer;background:var(--paper);color:var(--ink);border-radius:12px;padding:12px 16px;font-size:16px;font-weight:700;line-height:1.35;box-shadow:0 4px 0 #c9c0a8;width:100%;
+  transition:transform .15s;animation:slideIn .3s}
+.card:hover{transform:translateY(-2px)}
+.slot .card{box-shadow:0 3px 0 #c9c0a8}
+.card.ok{background:#c8f2dc;box-shadow:0 3px 0 #7cc9a1;cursor:default}
+.card.no{background:#ffd3d9;animation:shake .4s}
+
+/* SWBST */
+.swb{display:grid;gap:16px}
+.swrow{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:start}
+@media (max-width:640px){.swrow{grid-template-columns:1fr}}
+.swl{font-family:var(--display);font-size:20px;color:var(--folder);padding-top:10px}
+.swl small{display:block;font-family:var(--body);font-size:13px;color:#cfc9b8;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:0;cursor:pointer;border-radius:999px;padding:10px 16px;font-size:15px;font-weight:800;background:rgba(255,255,255,.1);color:#f3eee0;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.2);transition:all .15s;text-align:left;line-height:1.3}
+.chip:hover{background:rgba(255,255,255,.18)}
+.chip.sel{background:var(--folder);color:var(--ink);box-shadow:none}
+.chip.right{background:#7fe0b0;color:#0f3b29}
+.chip.wrong{background:#ff8fa0;color:#4a0c18;animation:shake .4s}
+.chip:focus-visible{outline:3px solid #ffd27a}
+
+/* closed */
+.closed{position:relative}
+.bigstamp{position:absolute;right:6%;top:18px;font-family:var(--display);font-size:clamp(26px,5vw,44px);color:var(--red);border:6px double var(--red);padding:4px 16px;border-radius:8px;
+  transform:rotate(-14deg) scale(1);animation:slam .5s cubic-bezier(.3,1.6,.5,1) .3s both;mix-blend-mode:multiply;text-align:center;line-height:1}
+@keyframes slam{from{transform:rotate(-14deg) scale(3);opacity:0}to{transform:rotate(-14deg) scale(1);opacity:.9}}
+.final{font-family:var(--type);font-size:clamp(17px,2.2vw,19px);line-height:34px;max-width:60ch}
+.final b{font-family:var(--body);font-weight:900;color:var(--blue)}
+.stars{font-size:46px;letter-spacing:6px;color:#d5cbb0}
+.stars span{display:inline-block}
+.stars span.on{color:#e9a91c;animation:pop .5s cubic-bezier(.3,1.8,.5,1) both}
+@keyframes pop{from{transform:scale(0) rotate(-90deg)}}
+.rank{font-family:var(--type);font-size:15px;color:var(--muted);letter-spacing:.08em}
+
+/* lab */
+textarea{width:100%;min-height:200px;border-radius:12px;border:2px solid #c9c0a8;background:#fffdf6;color:var(--ink);padding:14px;font-family:var(--body);font-size:16px;line-height:1.5;resize:vertical;box-sizing:border-box}
+textarea:focus{outline:3px solid #ffd27a}
+.labgrid{display:grid;gap:18px}
+input[type=range]{accent-color:var(--red);width:180px}
+.kw{display:flex;flex-wrap:wrap;gap:8px}
+.kw span{background:#ffe07a;color:var(--ink);border-radius:8px;padding:4px 10px;font-weight:800;font-size:14px}
+.out{font-size:18px;line-height:1.6}
+.out li{margin-bottom:8px}
+.swform{display:grid;gap:10px}
+.swform label{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;font-weight:900;color:var(--ink)}
+@media (max-width:560px){.swform label{grid-template-columns:1fr}}
+.swform input{border:2px solid #c9c0a8;border-radius:10px;padding:10px 12px;font-size:16px;font-family:var(--body);background:#fffdf6;color:var(--ink);min-width:0}
+.swform input:focus{outline:3px solid #ffd27a}
+.note{font-size:14px;color:var(--muted)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:5}
+@media (prefers-reduced-motion:reduce){.lens,.scr,.bigstamp,.stars span.on,.card,.opt.wrong{animation:none}}
+</style>
+
+<canvas id="dust"></canvas>
+<canvas id="confetti"></canvas>
+<main>
+  <!-- TITLE -->
+  <section class="scr on" id="s-title">
+    <div class="hero">
+      <div class="logo">STORY<br>SLEUTH
+        <svg class="lens" viewBox="0 0 100 100" aria-hidden="true"><circle cx="40" cy="40" r="30" fill="rgba(255,255,255,.18)" stroke="#fbf6ea" stroke-width="8"/><path d="M62 62 L92 92" stroke="#fbf6ea" stroke-width="12" stroke-linecap="round"/><path d="M26 30 Q32 20 44 20" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+        <small>CRACK THE CASE · SUM IT UP</small>
+      </div>
+      <p class="tagline">Every story hides its big idea. Read the case, follow the clues and write a summary <b>a real detective would sign</b>.</p>
+      <div class="row" style="justify-content:center">
+        <button class="btn" id="startBtn">Open the case files</button>
+        <button class="btn ghost" id="labBtn">Summary Lab</button>
+      </div>
+      <div class="badge" id="rankBadge">🔎 Rookie Sleuth · 0 stars</div>
+    </div>
+  </section>
+
+  <!-- CASE BOARD -->
+  <section class="scr" id="s-board">
+    <div class="topbar">
+      <h2>Case files</h2>
+      <div class="row"><span class="badge" id="rankBadge2"></span><button class="btn ghost" data-go="s-title">Back</button></div>
+    </div>
+    <div class="cases" id="cases"></div>
+  </section>
+
+  <!-- READ -->
+  <section class="scr" id="s-read">
+    <div class="topbar">
+      <button class="btn ghost" data-go="s-board">◀ Case files</button>
+      <span class="badge">📖 Read carefully. The clues are in here.</span>
+    </div>
+    <article class="paper">
+      <div class="clip"></div>
+      <h3 id="rTitle"></h3>
+      <div class="meta" id="rMeta"></div>
+      <div class="story" id="rStory"></div>
+    </article>
+    <div class="row" style="margin-top:22px;justify-content:flex-end">
+      <button class="btn blue" id="toClues">I've read it. Start the clues ▶</button>
+    </div>
+  </section>
+
+  <!-- CLUES -->
+  <section class="scr" id="s-clue">
+    <div class="steps" id="steps"><i></i><i></i><i></i><i></i></div>
+    <div class="qhead"><span class="qlabel" id="qLabel"></span><span class="score" id="qScore">0 pts</span></div>
+    <div id="clueBody"></div>
+    <div class="feedback" id="fb"></div>
+    <div class="row" style="margin-top:20px;justify-content:space-between">
+      <button class="btn ghost" id="peek">Peek at the story</button>
+      <button class="btn blue" id="nextClue" disabled>Next clue ▶</button>
+    </div>
+    <article class="paper" id="peekPaper" style="display:none;margin-top:18px"><div class="story" id="peekStory"></div></article>
+  </section>
+
+  <!-- CLOSED -->
+  <section class="scr" id="s-closed">
+    <article class="paper closed">
+      <div class="bigstamp">CASE<br>CLOSED</div>
+      <div class="meta" id="cNo"></div>
+      <h3 id="cTitle"></h3>
+      <div class="stars" id="cStars"><span>★</span><span>★</span><span>★</span></div>
+      <p class="rank" id="cScore"></p>
+      <div class="meta" style="margin-top:18px">YOUR SUMMARY</div>
+      <p class="final" id="cSummary"></p>
+      <div class="meta" style="margin-top:8px">MAIN IDEA</div>
+      <p class="final" id="cMain"></p>
+    </article>
+    <div class="row" style="margin-top:22px;justify-content:flex-end">
+      <button class="btn ghost" id="replay">Replay case</button>
+      <button class="btn blue" data-go="s-board">More cases</button>
+    </div>
+  </section>
+
+  <!-- LAB -->
+  <section class="scr" id="s-lab">
+    <div class="topbar">
+      <h2>Summary Lab</h2>
+      <button class="btn ghost" data-go="s-title">Back</button>
+    </div>
+    <div class="labgrid">
+      <article class="paper">
+        <div class="meta">STEP 1 · PASTE ANY STORY OR ARTICLE</div>
+        <textarea id="labText" aria-label="Story text"></textarea>
+        <div class="row" style="margin-top:14px;justify-content:space-between">
+          <label class="row" style="color:var(--ink);font-weight:800" for="labLen">Key sentences: <span id="labN">3</span> <input type="range" id="labLen" min="1" max="6" value="3"></label>
+          <button class="btn" id="labGo">Find the key sentences</button>
+        </div>
+        <p class="note">The lab scores every sentence by how many of the story's most repeated important words it uses, then keeps the top ones in story order.</p>
+      </article>
+      <article class="paper" id="labOut" style="display:none">
+        <div class="meta">STEP 2 · CLUE WORDS</div>
+        <div class="kw" id="labKw"></div>
+        <div class="meta" style="margin-top:18px">KEY SENTENCES</div>
+        <ol class="out" id="labSent"></ol>
+      </article>
+      <article class="paper">
+        <div class="meta">STEP 3 · WRITE IT IN YOUR OWN WORDS (SOMEBODY · WANTED · BUT · SO · THEN)</div>
+        <div class="swform">
+          <label for="w1">Somebody <input id="w1" placeholder="Who is the main character?"></label>
+          <label for="w2">Wanted <input id="w2" placeholder="What did they want?"></label>
+          <label for="w3">But <input id="w3" placeholder="What problem got in the way?"></label>
+          <label for="w4">So <input id="w4" placeholder="What did they do about it?"></label>
+          <label for="w5">Then <input id="w5" placeholder="How did it end?"></label>
+        </div>
+        <div class="meta" style="margin-top:18px">YOUR SUMMARY</div>
+        <p class="final" id="labSum" style="color:var(--muted)">Fill in the five boxes and your summary appears here.</p>
+        <div class="row"><button class="btn blue" id="copySum">Copy summary</button><span class="note" id="copyNote"></span></div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const CASES=[
+{id:1,title:'The Falcon Who Flew Away',where:'Desert camp',blurb:'A prized falcon vanishes behind the dunes. Can Mariam bring her home?',
+story:[`Mariam had waited all year for the winter camp in the desert. Her grandfather was bringing Noor, his clever peregrine falcon.`,
+`On the first morning, Grandpa let Noor fly. She circled once, twice, then vanished behind the red dunes. Grandpa's lure swung empty in the wind.`,
+`"She will come back," Grandpa said calmly. But Mariam could not sit still. She climbed the tallest dune and searched until her eyes stung.`,
+`At noon she spotted a grey feather, then another, leading toward the old ghaf tree near the well. Mariam ran, then remembered Grandpa's lesson: falcons hate sudden noise. She slowed down and walked softly.`,
+`Noor sat on a low branch, tired and thirsty. Mariam held out the glove and whistled the way Grandpa did. After a long moment, Noor hopped onto her wrist.`,
+`That night by the fire, Grandpa smiled. "You found her with your eyes, but you brought her home with patience."`],
+who:{opts:['Mariam','Grandpa','Noor the falcon'],a:0,why:'Mariam is the one who acts and changes. The story follows her search from start to finish.'},
+setting:{opts:['A winter camp in the desert','A busy city zoo','A beach at sunset'],a:0,why:'Clues: "winter camp in the desert", "red dunes", "the old ghaf tree near the well".'},
+events:['Grandpa lets Noor fly and she disappears behind the dunes.','Mariam climbs the tallest dune to search.','She follows grey feathers to the ghaf tree.','She walks softly, whistles, and Noor hops onto her glove.','Grandpa praises her patience by the fire.'],
+main:{opts:['A girl finds her grandfather\'s lost falcon by staying patient and calm.','Mariam sees a grey feather at noon near a well.','Falcons are the fastest birds in the world.'],a:0,
+ why:['Yes! It covers the whole story in one sentence: who, the problem, and how it was solved.','That is a true detail, but it is only one moment. A main idea covers the whole story.','The story never says this. A main idea has to come from the text.']},
+swbst:[['Mariam','Noor','Grandpa\'s camel'],['to find her grandfather\'s falcon after it flew away','to win a race up the dunes','to go home early'],['the falcon vanished behind the dunes and the lure could not call her back','it started to rain','she lost her shoes'],['she followed a trail of feathers to the ghaf tree','she went to sleep','she called the police'],['she stayed calm, whistled, and Noor came back to her glove','Noor flew to another country','she gave up and cried']]},
+{id:2,title:'The Robot With Two Left Feet',where:'School talent show',blurb:'Omar\'s dancing robot crashes at the final practice. Is the show over?',
+story:[`Omar built a robot named Bolt for the school talent show. Bolt was supposed to dance to a fast song while lights flashed on its chest.`,
+`At the final practice, Bolt spun once and crashed onto the stage. One wheel rolled under the curtains. Some kids laughed, and Omar's cheeks burned.`,
+`That evening, Omar wanted to quit. His sister Layla sat beside him with his laptop. "Robots don't fail," she said. "Code does. Let's find the bug."`,
+`Together they found it: Bolt was told to spin faster than its motors could handle. Omar slowed the spin and added a short pause between moves.`,
+`On show night, Bolt rolled out, waved its arm, and danced in perfect time. Its chest lights spelled THANK YOU, LAYLA.`,
+`The hall cheered. Omar learned that a mistake is just a clue telling you what to fix next.`],
+who:{opts:['Layla','Omar','Bolt the robot'],a:1,why:'Omar builds Bolt, feels the failure, and learns the lesson. He is the main character.'},
+setting:{opts:['A space station','A football stadium','A school talent show'],a:2,why:'Clues: "school talent show", "the stage", "show night", "the hall cheered".'},
+events:['Omar builds Bolt to dance at the talent show.','Bolt crashes during the final practice.','Omar wants to quit, but Layla helps him hunt for the bug.','They slow the spin and add pauses to the code.','Bolt dances perfectly on show night.'],
+main:{opts:['One of Bolt\'s wheels rolls under the curtains.','A boy fixes his crashing robot by finding the bug instead of giving up.','Robots are better dancers than people.'],a:1,
+ why:['That is a small detail from one scene. A main idea covers the whole story.','Exactly. It names the character, the problem and how he solved it.','The story never says this. A main idea has to come from the text.']},
+swbst:[['Omar','the audience','the curtains'],['his robot to dance at the talent show','to become a famous singer','to build a car'],['Bolt crashed at the final practice','the school was closed','Layla broke the laptop'],['he and Layla searched the code and fixed the spin speed','he bought a new robot','he hid backstage'],['Bolt danced perfectly and the hall cheered','Bolt ran away','the show was cancelled']]},
+{id:3,title:'The Grey Pearl',where:'Old Dubai harbor',blurb:'Why would a pearl diver keep a pearl that isn\'t even shiny?',
+story:[`Every Friday, Hamad visited his grandfather at the old harbor in Dubai. Jaddi had been a pearl diver long ago, before oil changed everything.`,
+`This Friday, Hamad asked, "Was diving scary?" Jaddi laughed and pulled out a small wooden box. Inside was a nose clip made of turtle shell, a stone weight, and a single grey pearl.`,
+`"We dove for two minutes on one breath," Jaddi said. "Forty dives a day. The sea was hard, but the crew was family. We sang to keep our hearts strong."`,
+`He told Hamad about the day a storm hit their dhow. The crew sang the old songs and rowed together until they reached the shore.`,
+`Hamad looked at the grey pearl. "Why keep this one? It isn't even shiny." "Because it's from that day," Jaddi said. "It reminds me that we survived because we worked together."`,
+`Hamad went home and wrote the story down so he would never forget it.`],
+who:{opts:['A dhow captain','Hamad','A fisherman\'s cat'],a:1,why:'Hamad asks the question, hears the story and acts at the end. The story is told through him.'},
+setting:{opts:['The old harbor in Dubai','A shopping mall','A mountain cave'],a:0,why:'The first line says it: "the old harbor in Dubai".'},
+events:['Hamad visits Jaddi at the old harbor.','Jaddi opens a box with a nose clip, a stone weight and a grey pearl.','Jaddi explains how divers held their breath and sang together.','He tells how the crew survived a storm by rowing together.','Hamad writes the story down so he will remember it.'],
+main:{opts:['Pearls are only valuable when they are shiny.','The nose clip was made of turtle shell.','A boy learns from his grandfather that pearl divers survived hard times by working together.'],a:2,
+ why:['The story actually shows the opposite. Jaddi treasures a pearl that is not shiny.','True, but it is just one object in one scene.','Spot on. It captures the lesson the whole story builds toward.']},
+swbst:[['Hamad','a shark','Hamad\'s teacher'],['to know what pearl diving was really like','to buy a new boat','to learn to swim fast'],['diving was hard and dangerous, and once a storm hit the dhow','Jaddi refused to talk','the harbor was closed'],['the crew sang and rowed together until they reached shore','they sold all their pearls','they called a helicopter'],['Hamad wrote the story down to keep the memory alive','Hamad threw the pearl into the sea','Jaddi moved away']]},
+{id:4,title:'The Sandstorm Bake Sale',where:'School corridor',blurb:'Trays of luqaimat, a charity goal, and a sky turning orange.',
+story:[`Class 5B planned a bake sale to raise money for the animal shelter. Aisha made date cookies, Ravi baked luqaimat, and Sara painted a giant sign.`,
+`On the morning of the sale, the sky turned orange. A sandstorm rolled across the school field, and the teacher said nobody could stay outside.`,
+`The class stared at their trays. "All this food, and no customers," Ravi sighed.`,
+`Aisha had an idea. "If people can't come out to us, we'll go in to them." The class carried the tables into the main corridor, and Sara hung the sign above the library doors.`,
+`Students and parents waiting out the storm smelled the warm luqaimat and lined up. By lunchtime, every tray was empty.`,
+`They raised 1,200 dirhams, enough to feed the shelter's dogs for two months. The storm, Aisha said, had brought the customers right to them.`],
+who:{opts:['The shelter dogs','The head teacher','Class 5B'],a:2,why:'The whole class plans, struggles and succeeds together. Aisha has the idea, but the story is about 5B.'},
+setting:{opts:['A school on a sandstorm day','A farm','A desert camp'],a:0,why:'Clues: "school field", "main corridor", "library doors", and of course the sandstorm.'},
+events:['Class 5B plans a bake sale for the animal shelter.','A sandstorm stops the outdoor sale.','Aisha suggests moving the sale indoors.','People waiting out the storm line up to buy food.','The class raises 1,200 dirhams for the shelter.'],
+main:{opts:['A class saves its charity bake sale by moving it indoors when a sandstorm hits.','Ravi baked luqaimat for the sale.','Sandstorms happen every day in winter.'],a:0,
+ why:['Yes. Who, what they wanted, the problem and the fix, all in one line.','A real detail, but too small to be the main idea.','The story never says this. Main ideas come from the text.']},
+swbst:[['Class 5B','the sandstorm','a lost dog'],['to raise money for the animal shelter','to win a cooking contest','to go home early'],['a sandstorm made it unsafe to sell outside','they forgot to bake','nobody liked dates'],['they moved the tables into the school corridor','they ate all the food','they cancelled the sale'],['people lined up and they raised 1,200 dirhams','the storm blew the sign away','the shelter closed']]},
+{id:5,title:'Lost in the Spice Souk',where:'Spice souk',blurb:'One second looking at a compass. One little sister gone.',
+story:[`Zayed promised his mother he would hold his little sister's hand in the spice souk. Fatima was six and loved anything that sparkled.`,
+`The souk was packed. Sacks of saffron, cardamom and dried lemons lined the narrow alleys. Zayed stopped for one second to look at a brass compass, and when he turned around, Fatima's hand was gone.`,
+`His heart pounded. He wanted to run in every direction. Instead he remembered what his father always said: "When you're lost, think before you move."`,
+`Fatima loved sparkles. The only sparkly place nearby was the lantern shop by the blue door. Zayed asked a shopkeeper the way and hurried through the crowd.`,
+`There she was, staring up at a hundred glowing lanterns, completely calm.`,
+`Zayed hugged her tight. On the way home he held her hand the whole time, and he never even glanced at another compass.`],
+who:{opts:['Fatima','Zayed','The shopkeeper'],a:1,why:'Zayed makes the promise, makes the mistake and fixes it. The story follows him.'},
+setting:{opts:['A quiet library','A crowded spice souk','A football pitch'],a:1,why:'Clues: "spice souk", "saffron, cardamom and dried lemons", "narrow alleys".'},
+events:['Zayed promises to hold Fatima\'s hand in the souk.','He stops to look at a compass and loses her.','He stays calm and thinks about where she would go.','He asks a shopkeeper the way to the lantern shop.','He finds Fatima staring at the lanterns.'],
+main:{opts:['The souk sold saffron, cardamom and dried lemons.','Brass compasses are the best souvenirs.','A boy finds his lost sister by thinking calmly about what she loves.'],a:2,
+ why:['That describes the setting, not the main idea.','The story never says this, and the compass is what caused the trouble.','Right. The key move is that Zayed thinks instead of panicking.']},
+swbst:[['Zayed','their mother','a spice seller'],['to keep his little sister safe in the souk','to buy a lantern','to find gold'],['he looked away at a compass and lost her','the souk was closed','it started snowing'],['he remembered she loves sparkles and headed for the lantern shop','he went home alone','he bought the compass'],['he found her and held her hand all the way home','they both got lost','Fatima ran away again']]}
+];
+const SW=['Somebody','Wanted','But','So','Then'];
+const SWH=['the main character','their goal','the problem','what they did','how it ended'];
+const RANKS=[[0,'Rookie Sleuth'],[4,'Junior Detective'],[8,'Inspector'],[12,'Chief Inspector'],[15,'Master Sleuth']];
+
+let save={stars:{}};
+try{const s=localStorage.getItem('storysleuth');if(s)save=JSON.parse(s)}catch(e){}
+const persist=()=>{try{localStorage.setItem('storysleuth',JSON.stringify(save))}catch(e){}};
+const totalStars=()=>Object.values(save.stars).reduce((a,b)=>a+b,0);
+function rankName(n){let r=RANKS[0][1];RANKS.forEach(([k,v])=>{if(n>=k)r=v});return r}
+function refreshRank(){const n=totalStars();const t=`🔎 ${rankName(n)} · ${n} star${n===1?'':'s'}`;$('rankBadge').textContent=t;$('rankBadge2').textContent=t}
+
+/* audio */
+let AC;function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+function tone(f,d,type='sine',v=.15,delay=0,slide=0){const a=ac();if(!a)return;const t=a.currentTime+delay,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(f+slide,t+d);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.05)}
+function noise(d=.08,v=.2,delay=0){const a=ac();if(!a)return;const b=a.createBuffer(1,a.sampleRate*d,a.sampleRate),c=b.getChannelData(0);for(let i=0;i<c.length;i++)c[i]=(Math.random()*2-1)*(1-i/c.length)**3;const s=a.createBufferSource();s.buffer=b;const g=a.createGain();g.gain.value=v;const f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=900;s.connect(f).connect(g).connect(a.destination);s.start(a.currentTime+delay)}
+const sfx={good(){tone(660,.15,'triangle',.14);tone(990,.25,'triangle',.12,.08)},bad(){tone(200,.25,'sawtooth',.08,0,-80)},click(){tone(1200,.03,'square',.03)},
+ stamp(){noise(.25,.6,.3);tone(70,.3,'sine',.4,.3)},type(){noise(.03,.08)},win(){[523,659,784,1047].forEach((f,i)=>tone(f,.35,'triangle',.12,.6+i*.1))},page(){noise(.18,.12)}};
+
+/* nav */
+function go(id){document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id===id));scrollTo({top:0,behavior:'smooth'});if(id==='s-board')buildBoard();refreshRank()}
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ac();sfx.click();go(b.dataset.go)});
+$('startBtn').onclick=()=>{ac();sfx.page();go('s-board')};
+$('labBtn').onclick=()=>{ac();sfx.page();go('s-lab');runLab()};
+
+function buildBoard(){
+  const el=$('cases');el.innerHTML='';
+  CASES.forEach((c,i)=>{
+    const s=save.stars[c.id]||0;const b=document.createElement('button');b.className='case';b.style.setProperty('--r',((i%3)-1)*1.2+'deg');
+    b.innerHTML=`<span class="no">CASE #00${c.id} · ${c.where.toUpperCase()}</span><span class="t">${c.title}</span><span class="d">${c.blurb}</span><span class="s">${'★'.repeat(s)}${'☆'.repeat(3-s)}</span>${s?'<span class="stamp">SOLVED</span>':''}`;
+    b.onclick=()=>{ac();sfx.page();openCase(i)};el.appendChild(b);
+  });
+  const lab=document.createElement('button');lab.className='case lab';lab.style.setProperty('--r','1deg');
+  lab.innerHTML=`<span class="no">THE LAB · ANY STORY</span><span class="t">Summary Lab</span><span class="d">Paste your own story or article. Find its clue words and key sentences, then write the summary yourself.</span><span class="s">🧪</span>`;
+  lab.onclick=()=>{ac();sfx.page();go('s-lab');runLab()};el.appendChild(lab);
+}
+
+/* case flow */
+let C=null,ci=0,step=0,pts=0,firstTry=true,answers={};
+function openCase(i){
+  ci=i;C=CASES[i];
+  $('rTitle').textContent=C.title;$('rMeta').textContent=`CASE #00${C.id} · LOCATION: ${C.where.toUpperCase()} · ${C.story.join(' ').split(/\s+/).length} WORDS`;
+  $('rStory').innerHTML=C.story.map(p=>`<p>${esc(p)}</p>`).join('');
+  $('peekStory').innerHTML=$('rStory').innerHTML;
+  go('s-read');
+}
+$('toClues').onclick=()=>{sfx.click();step=0;pts=0;answers={};go('s-clue');renderClue()};
+$('replay').onclick=()=>{sfx.click();openCase(ci)};
+$('peek').onclick=()=>{const p=$('peekPaper');const on=p.style.display==='none';p.style.display=on?'block':'none';$('peek').textContent=on?'Hide the story':'Peek at the story'};
+$('nextClue').onclick=()=>{sfx.click();step++;if(step>3)closeCase();else renderClue()};
+
+function setSteps(){[...$('steps').children].forEach((e,i)=>{e.className=i<step?'done':i===step?'cur':''})}
+function setScore(){$('qScore').textContent=pts+' pts'}
+function fb(ok,html){const f=$('fb');f.className='feedback on '+(ok?'good':'bad');f.innerHTML=html}
+function clearFb(){$('fb').className='feedback';$('nextClue').disabled=true;$('peekPaper').style.display='none';$('peek').textContent='Peek at the story'}
+const LABELS=['CLUE 1 OF 4 · WHO AND WHERE','CLUE 2 OF 4 · ORDER OF EVENTS','CLUE 3 OF 4 · THE MAIN IDEA','CLUE 4 OF 4 · BUILD THE SUMMARY'];
+function renderClue(){
+  setSteps();setScore();clearFb();$('qLabel').textContent=LABELS[step];const body=$('clueBody');
+  if(step===0){
+    body.innerHTML=`<p class="q">Who is the main character, and where does it happen?</p><p class="qsub">The main character is the person the story follows and who changes. The setting is where and when.</p>
+    <div class="pair"><div><h4>MAIN CHARACTER</h4><div class="opts" id="o-who"></div></div><div><h4>SETTING</h4><div class="opts" id="o-set"></div></div></div>`;
+    let done={who:false,set:false},tries={who:0,set:0};
+    [['who',C.who],['set',C.setting]].forEach(([k,q])=>{
+      const box=$('o-'+k);q.opts.forEach((o,j)=>{const b=mkOpt(String.fromCharCode(65+j),o);b.onclick=()=>{
+        if(done[k])return;tries[k]++;
+        if(j===q.a){b.classList.add('right');sfx.good();done[k]=true;pts+=tries[k]===1?10:5;setScore();box.querySelectorAll('.opt').forEach(x=>x.disabled=true);fb(true,'<b>Good eye.</b> '+esc(q.why));
+          if(done.who&&done.set){$('nextClue').disabled=false;fb(true,'<b>Both clues found.</b> '+esc(C.who.why)+' '+esc(C.setting.why))}}
+        else{b.classList.remove('wrong');void b.offsetWidth;b.classList.add('wrong');sfx.bad();fb(false,'<b>Not that one.</b> Look again at who the story keeps following, and the place words in the first lines.')}
+      };box.appendChild(b)});
+    });
+  }
+  if(step===1){
+    body.innerHTML=`<p class="q">Put the events in order.</p><p class="qsub">Tap the events in the order they happen. Tap a placed card to send it back. A summary always keeps the story's order.</p>
+    <div class="slots" id="slots"></div><div class="pool" id="pool"></div><div class="row" style="margin-top:14px"><button class="btn" id="checkOrder">Check order</button></div>`;
+    const n=C.events.length;const slots=$('slots');for(let i=0;i<n;i++){const s=document.createElement('div');s.className='slot';slots.appendChild(s)}
+    let order=shuffle(C.events.map((_,i)=>i));if(order.every((v,i)=>v===i))order.reverse();
+    let placed=Array(n).fill(null),locked=Array(n).fill(false),attempts=0;
+    function draw(){
+      const pool=$('pool');pool.innerHTML='';
+      [...slots.children].forEach((s,i)=>{s.querySelector('.card')?.remove();if(placed[i]!=null){const c=mkCard(C.events[placed[i]]);if(locked[i])c.classList.add('ok');c.onclick=()=>{if(locked[i])return;sfx.click();placed[i]=null;draw()};s.appendChild(c)}});
+      order.filter(e=>!placed.includes(e)).forEach(e=>{const c=mkCard(C.events[e]);c.onclick=()=>{sfx.type();const k=placed.findIndex((p,i)=>p==null&&!locked[i]);if(k>=0){placed[k]=e;draw()}};pool.appendChild(c)});
+      $('checkOrder').disabled=placed.some(p=>p==null)||locked.every(Boolean);
+    }
+    $('checkOrder').onclick=()=>{
+      attempts++;let wrong=0;
+      placed.forEach((p,i)=>{if(p===i)locked[i]=true;else wrong++});
+      if(!wrong){sfx.good();pts+=Math.max(10,30-(attempts-1)*8);setScore();draw();fb(true,'<b>Timeline locked in.</b> Every event is in the right place.');$('nextClue').disabled=false;return}
+      sfx.bad();
+      const bad=[...slots.children].filter((_,i)=>!locked[i]).map(s=>s.querySelector('.card'));bad.forEach(c=>c&&c.classList.add('no'));
+      fb(false,`<b>${n-wrong} of ${n} in place.</b> The green cards are locked. Ask yourself: what had to happen first for the next thing to happen?`);
+      setTimeout(()=>{placed=placed.map((p,i)=>locked[i]?p:null);draw()},650);
+    };
+    draw();
+  }
+  if(step===2){
+    body.innerHTML=`<p class="q">Which sentence is the main idea?</p><p class="qsub">A main idea covers the whole story in one sentence. Watch out for tiny details, and for ideas the story never says.</p><div class="opts" id="o-main"></div>`;
+    let t=0,done=false;C.main.opts.forEach((o,j)=>{const b=mkOpt(String.fromCharCode(65+j),o);b.onclick=()=>{if(done)return;t++;
+      if(j===C.main.a){done=true;b.classList.add('right');sfx.good();pts+=t===1?20:t===2?10:5;setScore();$('o-main').querySelectorAll('.opt').forEach(x=>x.disabled=true);fb(true,'<b>Case insight.</b> '+esc(C.main.why[j]));$('nextClue').disabled=false;answers.main=o}
+      else{b.classList.remove('wrong');void b.offsetWidth;b.classList.add('wrong');b.disabled=true;sfx.bad();fb(false,'<b>Hmm.</b> '+esc(C.main.why[j]))}};$('o-main').appendChild(b)});
+  }
+  if(step===3){
+    body.innerHTML=`<p class="q">Build the summary.</p><p class="qsub">Detectives use the <b>Somebody · Wanted · But · So · Then</b> method. Pick the best piece for each part, then check.</p><div class="swb" id="swb"></div><div class="row" style="margin-top:16px"><button class="btn" id="checkSw" disabled>Check summary</button></div>`;
+    const sel=Array(5).fill(null),ok=Array(5).fill(false);let attempts=0;
+    const shuffled=C.swbst.map(opts=>shuffle(opts.map((t,j)=>({t,j}))));
+    const swb=$('swb');
+    C.swbst.forEach((_,r)=>{const row=document.createElement('div');row.className='swrow';row.innerHTML=`<div class="swl">${SW[r]}<small>${SWH[r]}</small></div><div class="chips"></div>`;
+      const ch=row.querySelector('.chips');shuffled[r].forEach(o=>{const b=document.createElement('button');b.className='chip';b.textContent=o.t;b.onclick=()=>{if(ok[r])return;sfx.click();sel[r]=o.j;ch.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel','wrong'));b.classList.add('sel');$('checkSw').disabled=sel.some(s=>s==null)};ch.appendChild(b)});swb.appendChild(row)});
+    $('checkSw').onclick=()=>{attempts++;let wrong=0;
+      [...swb.children].forEach((row,r)=>{const chosen=row.querySelector('.chip.sel');if(sel[r]===0){ok[r]=true;chosen&&chosen.classList.add('right')}else{wrong++;if(chosen){chosen.classList.remove('sel');chosen.classList.add('wrong')};sel[r]=null}});
+      if(!wrong){sfx.good();pts+=Math.max(10,30-(attempts-1)*8);setScore();$('checkSw').disabled=true;answers.sum=summaryText(C);fb(true,'<b>Summary complete.</b> Time to close the case.');$('nextClue').disabled=false;$('nextClue').textContent='Close the case ▶'}
+      else{sfx.bad();$('checkSw').disabled=true;fb(false,`<b>${5-wrong} of 5 parts are solid.</b> Swap the red ones. Each part should be about the main character and come from the story.`)}};
+  }
+  if(step<3)$('nextClue').textContent='Next clue ▶';
+}
+function summaryText(c){const s=c.swbst.map(o=>o[0]);return `${cap(s[0])} wanted ${s[1]}, but ${s[2]}. So ${s[3]}. Then ${s[4]}.`}
+function closeCase(){
+  const stars=pts>=90?3:pts>=65?2:1;const prev=save.stars[C.id]||0;if(stars>prev){save.stars[C.id]=stars;persist()}
+  $('cNo').textContent=`CASE #00${C.id} · ${C.where.toUpperCase()}`;$('cTitle').textContent=C.title;
+  $('cScore').textContent=`${pts} of 100 points · Rank: ${rankName(totalStars())}`;
+  const s=C.swbst.map(o=>o[0]);
+  $('cSummary').innerHTML=`<b>${esc(cap(s[0]))}</b> wanted <b>${esc(s[1])}</b>, but <b>${esc(s[2])}</b>. So <b>${esc(s[3])}</b>. Then <b>${esc(s[4])}</b>.`;
+  $('cMain').textContent=C.main.opts[C.main.a];
+  go('s-closed');
+  const st=$('cStars').children;for(let i=0;i<3;i++){st[i].classList.remove('on');if(i<stars)setTimeout(()=>st[i].classList.add('on'),900+i*200)}
+  sfx.stamp();sfx.win();setTimeout(confetti,650);
+}
+
+/* helpers */
+function mkOpt(k,t){const b=document.createElement('button');b.className='opt';b.innerHTML=`<span class="k">${k}</span><span>${esc(t)}</span>`;return b}
+function mkCard(t){const b=document.createElement('button');b.className='card';b.textContent=t;return b}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+
+/* lab */
+const STOP=new Set('a an the and or but so if then than that this these those to of in on at by for with from up down out over under again once is are was were be been being have has had do does did i me my we our you your he him his she her it its they them their what which who whom when where why how all any both each few more most other some such no not only own same too very can will just should now said one two also into about after before while as there here would could around until away back still every like'.split(' '));
+const SAMPLE=`Leila had never planted anything before. When her school announced a rooftop garden contest, she signed up anyway. Her class got the smallest corner of the roof, right next to the noisy air conditioners.
+The first seeds dried out in two days. The summer sun was far too strong for them. Leila's friends wanted to give up and enter the art contest instead.
+Leila asked the school caretaker for help. He showed her how to build shade from old palm fronds and how to water the plants early in the morning, before the heat.
+Slowly, the tomatoes and mint began to grow. Leila's class added a small drip pipe made from recycled bottles, so not a single drop of water was wasted.
+On judging day, their corner was the greenest on the roof. They did not win first prize, but the judges gave them a special award for saving water. Leila now grows mint on her balcony at home.`;
+$('labText').value=SAMPLE;
+function runLab(){
+  const text=$('labText').value.trim();const n=+$('labLen').value;$('labN').textContent=n;
+  if(!text){$('labOut').style.display='none';return}
+  const sents=text.replace(/\s+/g,' ').match(/[^.!?]+[.!?]+["”']?|[^.!?]+$/g)||[text];
+  const words=t=>(t.toLowerCase().match(/[a-z؀-ۿ']+/g)||[]).map(w=>w.replace(/'s$/,'')).filter(w=>w.length>2&&!STOP.has(w));
+  const freq={};words(text).forEach(w=>freq[w]=(freq[w]||0)+1);
+  const top=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const scored=sents.map((s,i)=>{const ws=words(s);let sc=ws.reduce((a,w)=>a+(freq[w]||0),0)/Math.pow(Math.max(ws.length,1),.55);if(i===0)sc*=1.25;if(i===sents.length-1)sc*=1.15;return{s:s.trim(),i,sc}});
+  const pick=scored.slice().sort((a,b)=>b.sc-a.sc).slice(0,Math.min(n,sents.length)).sort((a,b)=>a.i-b.i);
+  const kwSet=new Set(top.map(t=>t[0]));
+  $('labKw').innerHTML=top.map(([w,c])=>`<span>${esc(w)} ×${c}</span>`).join('');
+  $('labSent').innerHTML=pick.map(p=>`<li>${p.s.split(/(\s+)/).map(tok=>{const k=tok.toLowerCase().replace(/[^a-z']/g,'').replace(/'s$/,'');return kwSet.has(k)?`<mark>${esc(tok)}</mark>`:esc(tok)}).join('')}</li>`).join('');
+  $('labOut').style.display='block';
+}
+$('labGo').onclick=()=>{ac();sfx.type();runLab()};
+$('labLen').oninput=runLab;
+function labSummary(){const v=[1,2,3,4,5].map(i=>$('w'+i).value.trim());if(v.every(x=>!x)){$('labSum').style.color='var(--muted)';$('labSum').textContent='Fill in the five boxes and your summary appears here.';return ''}
+  const s=`${v[0]?cap(v[0]):'Somebody'} wanted ${v[1]||'…'}, but ${v[2]||'…'}. So ${v[3]||'…'}. Then ${v[4]||'…'}.`;$('labSum').style.color='var(--ink)';$('labSum').textContent=s;return s}
+[1,2,3,4,5].forEach(i=>$('w'+i).addEventListener('input',labSummary));
+$('copySum').onclick=()=>{const s=labSummary();if(!s){$('copyNote').textContent='Fill in the boxes first.';return}
+  const done=()=>{$('copyNote').textContent='Copied.'};
+  try{navigator.clipboard.writeText(s).then(done,()=>{selectText($('labSum'));$('copyNote').textContent='Selected. Press Ctrl+C to copy.'})}catch(e){selectText($('labSum'));$('copyNote').textContent='Selected. Press Ctrl+C to copy.'}};
+function selectText(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}
+
+/* ambient dust + confetti */
+const dc=$('dust'),dx=dc.getContext('2d');let motes=[];
+function sizeC(){[dc,$('confetti')].forEach(c=>{c.width=innerWidth;c.height=innerHeight})}
+addEventListener('resize',sizeC);sizeC();
+for(let i=0;i<40;i++)motes.push({x:Math.random(),y:Math.random(),r:Math.random()*1.8+.4,v:Math.random()*.012+.004,p:Math.random()*6});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let conf=[];
+function confetti(){const W=innerWidth;for(let i=0;i<120;i++)conf.push({x:W/2+(Math.random()-.5)*200,y:innerHeight*.3,vx:(Math.random()-.5)*12,vy:-Math.random()*12-4,r:Math.random()*6+4,c:['#e8b54a','#d6334a','#3b6fd8','#1f9d6c','#fbf6ea'][i%5],a:Math.random()*6,va:(Math.random()-.5)*.3,l:1})}
+let lt=0;function tick(t){const dt=Math.min(.05,(t-lt)/1000);lt=t;
+  dx.clearRect(0,0,dc.width,dc.height);
+  if(!reduce)motes.forEach(m=>{m.y-=m.v*dt*4;m.p+=dt;if(m.y<-.02){m.y=1.02;m.x=Math.random()}const x=(m.x+Math.sin(m.p)*.01)*dc.width,y=m.y*dc.height;const near=1-Math.min(1,Math.hypot(x-dc.width/2,y)/ (dc.width*.6));dx.globalAlpha=.15+near*.5;dx.fillStyle='#ffe2a8';dx.beginPath();dx.arc(x,y,m.r,0,7);dx.fill()});
+  const cc=$('confetti').getContext('2d');cc.clearRect(0,0,innerWidth,innerHeight);
+  conf=conf.filter(p=>{p.vy+=.35;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.a+=p.va;p.l-=.006;cc.save();cc.globalAlpha=Math.max(0,p.l);cc.translate(p.x,p.y);cc.rotate(p.a);cc.fillStyle=p.c;cc.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);cc.restore();return p.l>0&&p.y<innerHeight+40});
+  requestAnimationFrame(tick)}
+requestAnimationFrame(tick);
+refreshRank();
+})();
+</script>
+
+</body></html>
